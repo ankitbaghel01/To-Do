@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+<style>
+*:before,
+*:after{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body{
+    height: 100vh;
+    background: #cc00ff;
+}
+.container{
+    width: 40%;
+    top: 20%;
+    left: 50%;
+    background: white;
+    border-radius: 10px;
+    min-width: 450px;
+    position: absolute;
+    min-height: 100px;
+    transform: translate(-50%,-50%);
+    box-shadow: 1px 2px 10px rgb(49, 49, 49);
+}
+ #newtask{
+    position: relative;
+    padding: 30px 20px;
+}
+.list{
+    width: 100%;
+    top:40vh ;
+    left: 50%;
+
+    background: white;
+    border-radius: 10px;
+    min-width: 450px;
+    position: absolute;
+    min-height: 100px;
+    transform: translate(-50%,-50%);
+    box-shadow: 1px 2px 10px rgb(49, 49, 49);
+}
+.task-item {
+  overflow: hidden; /* Clear the float */
+}
+
+.task-text {
+  float: left;
+}
+
+
+.delete-button {
+ 
+  background-color: rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  border: none;
+  width: 2%; 
+  position: absolute;
+  right: 0;
+  
+  padding: 12px 16px 12px 16px;
+  cursor: pointer;
+}
+.delete-button :hover{
+  background-color: rgb(131, 130, 129);
+}
+
+</style>
+
+
+</head>
+<body>
+    <div class="container">
+    <div id="newtask">
+        <form class="d-flex" role="search" id="todo-form">
+            <input id="task-input" class="form-control me-2" type="search" placeholder="Search"name="todo" aria-label="Search">
+            <button class="btn btn-outline-primary" type="submit"id="add-button">Add</button>
+          </form>
+          
+
+        </div>
+    
+    
+    <div class="list">
+        <div id="task-list">
+        </div>
+    </div>
+    
+    
+    
+        <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-app.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/8.4.2/firebase-database.js"></script>
+    
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    
+        <script>
+            // Your Firebase configuration
+            const firebaseConfig = {
+    apiKey: "AIzaSyCS188NW3J6-MW0vPF1AZLJLyC1earZfNU",
+    authDomain: "to-do-92f5e.firebaseapp.com",
+    databaseURL: "https://to-do-92f5e-default-rtdb.firebaseio.com",
+    projectId: "to-do-92f5e",
+    storageBucket: "to-do-92f5e.appspot.com",
+    messagingSenderId: "937216825193",
+    appId: "1:937216825193:web:2ae21d9663cb6a8bbe8ff8",
+    measurementId: "G-F4EY8721MR"
+  };
+            firebase.initializeApp(firebaseConfig);
+    
+            var todoRef = firebase.database().ref('todo');
+
+   // Get references to HTML elements
+const taskInput = document.getElementById("task-input");
+const addButton = document.getElementById("add-button");
+const taskList = document.getElementById("task-list");
+
+// Get a reference to the Firebase database
+const database = firebase.database();
+const tasksRef = database.ref("tasks");
+
+// Add event listener to the "Add Task" button
+addButton.addEventListener("click", addTask);
+
+// Function to add a task
+function addTask() {
+  const task = taskInput.value;
+  saveTaskToFirebase(task);
+  taskInput.value = "";
+}
+
+// Function to save a task to Firebase
+function saveTaskToFirebase(task) {
+  tasksRef.push().set({
+    task: task,
+    completed: false
+  });
+}
+
+
+
+// Function to retrieve and display tasks from Firebase
+tasksRef.on("value", (snapshot) => {
+  taskList.innerHTML = "";
+
+  snapshot.forEach((childSnapshot) => {
+    const taskData = childSnapshot.val();
+    const taskItem = document.createElement("li");
+
+    taskItem.innerText = taskData.task;
+    taskList.appendChild(taskItem);
+
+    // Add a delete button to each task item
+    const deleteButton = document.createElement("button");
+    
+    deleteButton.innerText = "×";
+//style button
+deleteButton.classList.add("delete-button");
+
+    deleteButton.addEventListener("click", () => {
+      // Remove the task from Firebase
+      childSnapshot.ref.remove();
+      
+      // Remove the task from the screen
+      taskList.removeChild(taskItem);
+    });
+
+    taskItem.appendChild(deleteButton);
+  });
+});
+
+
+
+
+// // Function to retrieve and display tasks from Firebase
+// tasksRef.on("value", (snapshot) => {
+//   taskList.innerHTML = "";
+
+//   snapshot.forEach((childSnapshot) => {
+//     const taskData = childSnapshot.val();
+//     const taskItem = document.createElement("li");
+
+//     taskItem.innerText = taskData.task;
+//     taskList.appendChild(taskItem);
+//   });
+// });
+
+
+
+//   var deleteButtons = document.getElementsByClassName("deleteBtn");
+//   for (var i = 0; i < deleteButtons.length; i++) {
+//     deleteButtons[i].addEventListener("click", deleteTodoItem);
+//   }
+
+//   function deleteTodoItem(event) {
+//     var listItem = event.target.parentNode;
+//     listItem.remove();
+//     // Additional code to delete data from Firebase if necessary
+//   }
+
+
+
+    
+        </script>
+</body>
+</html>
